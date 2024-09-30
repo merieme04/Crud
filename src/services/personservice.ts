@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { Person } from '../types/types'; 
+import { PaginatedResponse, Person } from '../types/types'; 
 const API_URL = 'http://localhost:8081/api/persons';
 
 // Créer une nouvelle personne
@@ -35,9 +35,15 @@ export const deletePerson = async (id: number): Promise<void> => {
 };
 
 // Récupérer toutes les personnes
-export const getAllPersons = async (): Promise<Person[]> => {
-  try {
-    const response = await axios.get<Person[]>(API_URL);
+export const getAllPersons = async (searchTerm = '', page = 1, size = 7) => {
+     try{
+  const response = await axios.get<PaginatedResponse<Person>>(API_URL, {
+    params: {
+      keyword: searchTerm,
+      page: page - 1,
+      size: size,
+    },
+  });
     return response.data;
   } catch (error) {
     console.error("Erreur lors de la récupération des données:", error);
@@ -56,13 +62,16 @@ export const updatePerson = async (id: number, personDetails: Person): Promise<P
   }
 };
 
-// Récupérer les personnes par nom
-export const getPersonsByNom = async (nom: string): Promise<Person[]> => {
+export const getPersonsByNom = async (searchTerm: string, page: number = 0, size: number = 5): Promise<PaginatedResponse<Person>> => {
   try {
-    const response = await axios.get<Person[]>(`${API_URL}/by-nom/${nom}`);
+    const response = await axios.get<PaginatedResponse<Person>>(
+      `${API_URL}/search?keyword=${searchTerm}&page=${page}&size=${size}`
+    );
+
+    // Retourner directement la réponse paginée qui contient 'content' et les informations de pagination
     return response.data;
   } catch (error) {
-    console.error(`Erreur lors de la récupération des personnes avec le nom ${nom}:`, error);
-    throw new Error(`Erreur lors de la récupération des personnes avec le nom ${nom}`);
+    console.error(`Erreur lors de la récupération des personnes avec le nom`, error);
+    throw new Error(`Erreur lors de la récupération des personnes avec le nom`);
   }
 };
